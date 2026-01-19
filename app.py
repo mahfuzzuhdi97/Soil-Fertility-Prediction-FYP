@@ -8,14 +8,15 @@ from pages_code import page_1_dashboard, page_2_input, page_3_result, page_4_eva
 st.set_page_config(page_title="Palm Nutrient AI", page_icon="🌴", layout="wide")
 
 # --- LOAD DATA GLOBALLY ---
-df = load_data()
+# Updated to handle potential load failures cleanly
+if 'data' not in st.session_state:
+    st.session_state.data = load_data()
 
 # ==========================================
 #      SIDEBAR SETUP (Logo & Title)
 # ==========================================
 with st.sidebar:
     # 1. Display Logo
-    # Ensure 'logo.png' is in your folder. If not, it uses the online URL.
     try:
         st.image("logo.png", use_container_width=True)
     except:
@@ -35,31 +36,37 @@ with st.sidebar:
 
     # Initialize session state for page selection
     if 'page_selection' not in st.session_state:
-        st.session_state.page_selection = "Tree Health Dashboard"
+        st.session_state.page_selection = "📊 Dashboard"
 
     # Function to update page
     def set_page(page_name):
         st.session_state.page_selection = page_name
 
     # Navigation Buttons
-    st.button("1. Tree Health Dashboard", on_click=set_page, args=("Tree Health Dashboard",), use_container_width=True)
-    st.button("2. Prediction Input", on_click=set_page, args=("Prediction Input",), use_container_width=True)
-    st.button("3. Prediction Result", on_click=set_page, args=("Prediction Result",), use_container_width=True)
-    st.button("4. Model Evaluation", on_click=set_page, args=("Model Evaluation",), use_container_width=True)
+    st.button("📊 Dashboard", on_click=set_page, args=("📊 Dashboard",), use_container_width=True)
+    st.button("🧪 Prediction Input", on_click=set_page, args=("🧪 Prediction Input",), use_container_width=True)
+    st.button("📋 Prediction Result", on_click=set_page, args=("📋 Prediction Result",), use_container_width=True)
+    st.button("📈 Model Evaluation", on_click=set_page, args=("📈 Model Evaluation",), use_container_width=True)
+    
+    # Add a reset button for debugging data issues
+    if st.button("🔄 Reload Data", type="secondary"):
+        st.cache_data.clear()
+        st.session_state.data = load_data()
+        st.rerun()
 
 # ==========================================
 #           MAIN PAGE ROUTING
 # ==========================================
 page = st.session_state.page_selection
 
-if page == "Tree Health Dashboard":
-    page_1_dashboard.show(df)
-
-elif page == "Prediction Input":
-    page_2_input.show()
-
-elif page == "Prediction Result":
-    page_3_result.show(df)
-
-elif page == "Model Evaluation":
-    page_4_evaluation.show(df)
+if st.session_state.data is not None:
+    if page == "📊 Dashboard":
+        page_1_dashboard.show(st.session_state.data)
+    elif page == "🧪 Prediction Input":
+        page_2_input.show(st.session_state.data)
+    elif page == "📋 Prediction Result":
+        page_3_result.show(st.session_state.data)
+    elif page == "📈 Model Evaluation":
+        page_4_evaluation.show(st.session_state.data)
+else:
+    st.error("⚠️ Application halted: Dataset could not be loaded. Please check 'oil_palm_perak.csv' and utils.py configuration.")
